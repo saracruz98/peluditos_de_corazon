@@ -1,7 +1,8 @@
 <?php
 // public/manage_products.php – UI de productos (incluye código backend)
-require_once __DIR__ . '/../src/db_connect.php';
-require_once __DIR__ . '/../src/inventory.php';
+require_once __DIR__ . '/src/db_connect.php';
+require_once __DIR__ . '/src/inventory.php';
+
 
 $pdo = getPDO();
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
