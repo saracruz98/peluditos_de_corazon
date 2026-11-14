@@ -1,8 +1,5 @@
 <?php
-/**
- * Generador de archivos .xlsx (Excel) en PHP puro, sin librerías externas.
- * Usa ZipArchive y XML inline. Soporta múltiples hojas y estilos básicos.
- */
+
 
 declare(strict_types=1);
 
@@ -136,7 +133,7 @@ final class SimpleXLSXWriter
         $cols = '';
         foreach ($s['widths'] as $i => $w) {
             $colNum = $i + 1;
-            $cols .= '<col min="' . $colNum . '" max="' . $colNum . '" width="' . (float)$w . '" customWidth="1"/>';
+            $cols .= '<col min="' . $colNum . '" max="' . $colNum . '" width="' . (float) $w . '" customWidth="1"/>';
         }
 
         $rowsXml = '';
@@ -181,7 +178,7 @@ final class SimpleXLSXWriter
             return '<c r="' . $ref . '" s="' . $style . '"><v>' . $value . '</v></c>';
         }
         return '<c r="' . $ref . '" s="' . $style . '" t="inlineStr"><is><t xml:space="preserve">'
-            . self::esc((string)$value) . '</t></is></c>';
+            . self::esc((string) $value) . '</t></is></c>';
     }
 
     private static function colLetter(int $n): string
