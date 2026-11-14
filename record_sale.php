@@ -1,9 +1,9 @@
 <?php
 // record_sale.php – registra la venta de un producto
 require_once __DIR__ . '/inventory.php';
+require_once __DIR__ . '/db_connect.php';
 
-$pdo = new PDO('sqlite:' . __DIR__ . '/petstore.db');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo = getPDO();
 
 $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
