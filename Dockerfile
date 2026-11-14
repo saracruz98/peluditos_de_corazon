@@ -13,6 +13,7 @@ RUN apt-get update && \
 # Copiar código fuente y archivos públicos
 COPY src/ /var/www/html/src/
 COPY public/ /var/www/html/
+COPY index.php /var/www/html/
 COPY start.sh /usr/local/bin/start.sh
 
 # Permisos y script de inicio
