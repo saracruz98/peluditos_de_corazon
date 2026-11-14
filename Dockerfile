@@ -1,22 +1,27 @@
-# Dockerfile – reorganized project structure
-# Base image with Apache and PHP 8.2
+# Dockerfile – estructura reorganizada
+# Imagen base con Apache y PHP 8.2
 FROM php:8.2-apache
 
-# Install dependencies for SQLite extension
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libsqlite3-dev && \
-    docker-php-ext-install pdo_sqlite && \
-    rm -rf /var/lib/apt/lists/*
+# Instalar dependencias necesarias para la extensión SQLite y compilar pdo_sqlite
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends 
+        build-essential 
+        libsqlite3-dev 
+    && docker-php-ext-install pdo_sqlite \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy source code (src) and public web files
+# Copiar el código fuente y los archivos públicos
 COPY src/ /var/www/html/src/
 COPY public/ /var/www/html/
+COPY start.sh /usr/local/bin/start.sh
 
-# Set proper permissions for www-data user
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 755 /var/www/html
+# Dar permisos de ejecución al script de inicio y al directorio web
+RUN chmod +x /usr/local/bin/start.sh \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
-# Expose port 80 (Render maps this to $PORT)
+# Exponer el puerto 80 (Render lo mapea a $PORT)
 EXPOSE 80
 
-# Default CMD from base image (apache2-foreground)
+# Usar el script de inicio que crea la base de datos y luego lanza Apache
+ENTRYPOINT ["/usr/local/bin/start.sh"]
