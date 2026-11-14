@@ -2,8 +2,11 @@
 # Base image with Apache and PHP 8.2
 FROM php:8.2-apache
 
-# Enable SQLite extension (already compiled in official image, but ensure)
-RUN docker-php-ext-install pdo_sqlite
+# Install dependencies required to compile the SQLite extension
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libsqlite3-dev && \
+    docker-php-ext-install pdo_sqlite && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy application source into Apache document root
 COPY . /var/www/html/
