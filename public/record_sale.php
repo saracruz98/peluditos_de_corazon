@@ -33,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$products = getProductList($pdo);
+// Solo productos generales en ventas (los baños se registran aparte)
+$products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'bano');
 ?>
 <!DOCTYPE html>
 <html lang="es">
