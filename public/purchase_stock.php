@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/partials/header.php';
 $title = 'Registrar compra (stock)';
-require_once __DIR__ . '/../src/db_connect.php';
+require_once __DIR__ . '/src/db_connect.php';
 require_once __DIR__ . '/../src/inventory.php';
 
 $pdo = getPDO();
