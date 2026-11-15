@@ -127,12 +127,12 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
           <input name="stock" type="number" min="0" class="form-control" value="<?= $edit['stock'] ?? 0 ?>">
         </div>
         <div class="col-md-2">
-          <label class="form-label">P. Compra</label>
-          <input name="purchase_price" type="number" step="0.01" min="0" class="form-control" value="<?= $edit['purchase_price'] ?? 0 ?>">
+          <label class="form-label">P. Compra (COP)</label>
+          <input name="purchase_price" type="number" step="1" min="0" class="form-control" value="<?= (int)($edit['purchase_price'] ?? 0) ?>">
         </div>
         <div class="col-md-2">
-          <label class="form-label">P. Venta</label>
-          <input name="sale_price" type="number" step="0.01" min="0" class="form-control" value="<?= $edit['sale_price'] ?? 0 ?>">
+          <label class="form-label">P. Venta (COP)</label>
+          <input name="sale_price" type="number" step="1" min="0" class="form-control" value="<?= (int)($edit['sale_price'] ?? 0) ?>">
         </div>
       </div>
 
@@ -151,8 +151,8 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
           <input name="bath_qty" type="number" min="1" value="1" class="form-control">
         </div>
         <div class="col-md-2">
-          <label class="form-label">💰 Precio del baño</label>
-          <input name="price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00">
+          <label class="form-label">💰 Precio del baño (COP)</label>
+          <input name="price" type="number" step="1" min="0" class="form-control" placeholder="Ej: 20000">
         </div>
         <div class="col-md-12">
           <div class="alert alert-info py-2 mb-0">
@@ -185,8 +185,8 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
       <td><?= htmlspecialchars($p['name']) ?></td>
       <td><?= $p['category'] === 'bano' ? '🛁 Baño' : '🛒 General' ?></td>
       <td><?= $p['category'] === 'bano' ? '<span class="badge bg-info">Servicio</span>' : '<strong>'.$p['stock'].'</strong>'.($p['stock']<=0?' <span class="badge bg-danger">Agotado</span>':($p['stock']<=5?' <span class="badge bg-warning text-dark">Poco</span>':'')) ?></td>
-      <td><?= $p['category']==='bano' ? '—' : '$'.number_format($p['purchase_price'], 0, ",", ".") ?></td>
-      <td>$ <?= number_format($p['sale_price'], 0, ",", ".") ?></td>
+      <td><?= $p['category']==='bano' ? '—' : '$ '.number_format($p['purchase_price'], 0, ',', '.') ?></td>
+      <td>$ <?= number_format($p['sale_price'], 0, ',', '.') ?></td>
       <td><a href="?edit=<?= $p['id'] ?>" class="btn btn-sm btn-outline-primary">Editar</a></td>
     </tr>
   <?php endforeach; ?>
