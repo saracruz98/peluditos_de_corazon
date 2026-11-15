@@ -33,8 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'type' => 'success',
             'text' => "✅ Compra registrada:
                        <br>📦 <strong>{$product['name']}</strong>
-                       <br>🔢 Cantidad: <strong>{$qty} unidades</strong> × <strong>$" . number_format($price,2) . " c/u</strong>
-                       <br>💰 Total pagado: <strong>$" . number_format($total,2) . "</strong>
+                       <br>🔢 Cantidad: <strong>{$qty} unidades</strong> × <strong>$" . number_format($price, 0, ",", ".") . " c/u</strong>
+                       <br>💰 Total pagado: <strong>$" . number_format($total, 0, ",", ".") . "</strong>
                        <br>📊 Stock nuevo: <strong>{$nuevo} unidades</strong>"
         ];
     }
@@ -86,8 +86,8 @@ $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'ban
         <input name="qty" id="qty" type="number" min="1" class="form-control" required oninput="calcTotal()">
       </div>
       <div class="mb-3">
-        <label class="form-label">Precio de compra unitario ($)</label>
-        <input name="purchase_price" id="unit-price" type="number" step="0.01" min="0" class="form-control" required oninput="calcTotal()">
+        <label class="form-label">Precio de compra unitario (COP $)</label>
+        <input name="purchase_price" id="unit-price" type="number" step="1" min="0" class="form-control" required oninput="calcTotal()">
       </div>
 
       <!-- Total calculado en tiempo real -->
@@ -102,6 +102,10 @@ $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'ban
 </div>
 
 <script>
+function formatCOP(amount) {
+    // Formato peso colombiano: $ 3.000
+    return '$ ' + Math.round(amount).toLocaleString('es-CO');
+}
 function calcTotal() {
     const qty   = parseFloat(document.getElementById('qty').value) || 0;
     const price = parseFloat(document.getElementById('unit-price').value) || 0;
@@ -109,7 +113,7 @@ function calcTotal() {
     const box   = document.getElementById('total-box');
     const disp  = document.getElementById('total-display');
     if (qty > 0 && price > 0) {
-        disp.textContent = '$' + total.toFixed(2);
+        disp.textContent = formatCOP(total);
         box.style.display = '';
     } else {
         box.style.display = 'none';
