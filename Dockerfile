@@ -6,16 +6,18 @@ RUN apt-get update && \
     docker-php-ext-install pdo_sqlite && \
     rm -rf /var/lib/apt/lists/*
 
-# src/ va dentro de html/ para que las rutas __DIR__ . '/src/...' funcionen
-COPY src/   /var/www/html/src/
-COPY public/ /var/www/html/
+COPY src/     /var/www/html/src/
+COPY public/  /var/www/html/
 COPY xlsx.php /var/www/html/../xlsx.php
 COPY index.php /var/www/html/index.php
 COPY start.sh /usr/local/bin/start.sh
 
+# Dar permisos de escritura a www-data en /var/www/html y /tmp
 RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html && \
-    chmod +x /usr/local/bin/start.sh
+    chmod +x /usr/local/bin/start.sh && \
+    chown www-data:www-data /tmp && \
+    chmod 1777 /tmp
 
 EXPOSE 80
 ENTRYPOINT ["/usr/local/bin/start.sh"]
