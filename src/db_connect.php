@@ -40,7 +40,7 @@ function initDB(PDO $pdo): void {
         // PostgreSQL
         $pdo->exec("CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
-            sku TEXT NOT NULL UNIQUE,
+            sku TEXT NOT NULL,
             name TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT 'general',
             stock INTEGER NOT NULL DEFAULT 0,
@@ -63,7 +63,7 @@ function initDB(PDO $pdo): void {
         // SQLite
         $pdo->exec("CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sku TEXT NOT NULL UNIQUE,
+            sku TEXT NOT NULL,
             name TEXT NOT NULL,
             category TEXT NOT NULL DEFAULT 'general',
             stock INTEGER NOT NULL DEFAULT 0,
