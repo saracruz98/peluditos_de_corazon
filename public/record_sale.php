@@ -4,6 +4,7 @@ require_once __DIR__ . '/src/db_connect.php';
 require_once __DIR__ . '/src/inventory.php';
 
 $pdo = getPDO();
+initDB($pdo);
 $msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -11,24 +12,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $qty        = (int)($_POST['qty'] ?? 0);
 
     $s = $pdo->prepare('SELECT * FROM products WHERE id=:id');
-    $s->execute([':id'=>$product_id]);
+    $s->execute([':id' => $product_id]);
     $product = $s->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
-        $msg = ['type'=>'danger','text'=>'Producto no encontrado.'];
+        $msg = ['type' => 'danger', 'text' => 'Producto no encontrado.'];
     } elseif ($qty <= 0) {
-        $msg = ['type'=>'danger','text'=>'La cantidad debe ser mayor que 0.'];
+        $msg = ['type' => 'danger', 'text' => 'La cantidad debe ser mayor que 0.'];
     } elseif ($product['stock'] < $qty) {
-        $msg = ['type'=>'danger','text'=>"Stock insuficiente. Disponible: {$product['stock']}."];
+        $msg = ['type' => 'danger', 'text' => "Stock insuficiente. Disponible: {$product['stock']}."];
     } else {
         $pdo->beginTransaction();
         $pdo->prepare('INSERT INTO sales (product_id,qty) VALUES (:pid,:qty)')
-            ->execute([':pid'=>$product_id,':qty'=>$qty]);
+            ->execute([':pid' => $product_id, ':qty' => $qty]);
         $pdo->prepare('UPDATE products SET stock=stock-:qty WHERE id=:id')
-            ->execute([':qty'=>$qty,':id'=>$product_id]);
+            ->execute([':qty' => $qty, ':id' => $product_id]);
         $pdo->commit();
         $restante = $product['stock'] - $qty;
-        $msg = ['type'=>'success','text'=>"✅ Venta registrada: {$qty} × {$product['name']}. Stock restante: {$restante}."];
+        $msg = ['type' => 'success', 'text' => "✅ Venta registrada: {$qty} × {$product['name']}. Stock restante: {$restante}."];
     }
 }
 

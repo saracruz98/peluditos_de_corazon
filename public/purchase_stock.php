@@ -4,29 +4,31 @@ require_once __DIR__ . '/src/db_connect.php';
 require_once __DIR__ . '/src/inventory.php';
 
 $pdo = getPDO();
+initDB($pdo);
 $msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_id = (int)($_POST['product_id'] ?? 0);
     $qty        = (int)($_POST['qty'] ?? 0);
+    $price      = (float)($_POST['purchase_price'] ?? 0);
 
     $s = $pdo->prepare('SELECT * FROM products WHERE id=:id');
-    $s->execute([':id'=>$product_id]);
+    $s->execute([':id' => $product_id]);
     $product = $s->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
-        $msg = ['type'=>'danger','text'=>'Producto no encontrado.'];
+        $msg = ['type' => 'danger', 'text' => 'Producto no encontrado.'];
     } elseif ($qty <= 0) {
-        $msg = ['type'=>'danger','text'=>'La cantidad debe ser mayor que 0.'];
+        $msg = ['type' => 'danger', 'text' => 'La cantidad debe ser mayor que 0.'];
     } else {
         $pdo->beginTransaction();
         $pdo->prepare('INSERT INTO purchases (product_id,qty) VALUES (:pid,:qty)')
-            ->execute([':pid'=>$product_id,':qty'=>$qty]);
-        $pdo->prepare('UPDATE products SET stock=stock+:qty WHERE id=:id')
-            ->execute([':qty'=>$qty,':id'=>$product_id]);
+            ->execute([':pid' => $product_id, ':qty' => $qty]);
+        $pdo->prepare('UPDATE products SET stock=stock+:qty, purchase_price=:pp WHERE id=:id')
+            ->execute([':qty' => $qty, ':pp' => $price, ':id' => $product_id]);
         $pdo->commit();
         $nuevo = $product['stock'] + $qty;
-        $msg = ['type'=>'success','text'=>"✅ Compra registrada: {$qty} × {$product['name']}. Stock nuevo: {$nuevo}."];
+        $msg = ['type' => 'success', 'text' => "✅ Compra registrada: +{$qty} × {$product['name']}. Stock nuevo: {$nuevo}."];
     }
 }
 
@@ -53,7 +55,7 @@ $products = getProductList($pdo);
 </nav>
 <div class="container">
 <div class="card shadow-sm" style="max-width:600px">
-  <div class="card-header bg-info text-white">📦 Registrar compra (reabastecimiento)</div>
+  <div class="card-header bg-success text-white">🛒 Registrar compra de stock</div>
   <div class="card-body">
     <?php if ($msg): ?>
       <div class="alert alert-<?= $msg['type'] ?>"><?= $msg['text'] ?></div>
@@ -74,7 +76,11 @@ $products = getProductList($pdo);
         <label class="form-label">Cantidad comprada</label>
         <input name="qty" type="number" min="1" class="form-control" required>
       </div>
-      <button type="submit" class="btn btn-info w-100 text-white">Registrar compra</button>
+      <div class="mb-3">
+        <label class="form-label">Precio de compra unitario</label>
+        <input name="purchase_price" type="number" step="0.01" min="0" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-success w-100">Registrar compra</button>
     </form>
   </div>
 </div>
