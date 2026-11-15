@@ -1,4 +1,4 @@
 #!/bin/sh
-# start.sh – runs DB init then starts Apache
-php /var/www/html/src/init_db.php || exit 1
+# Inicializar la base de datos y lanzar Apache
+php /var/www/html/src/init_db.php
 exec apache2-foreground
