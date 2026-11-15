@@ -31,12 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $msg = ['type' => 'success', 'text' => 'Producto creado correctamente.'];
             }
         } catch (PDOException $e) {
-            // SKU duplicado u otro error de base de datos
-            if (str_contains($e->getMessage(), 'UNIQUE') || str_contains($e->getMessage(), 'unique')) {
-                $msg = ['type' => 'danger', 'text' => "El SKU \"$sku\" ya existe. Usa otro SKU o edita el producto existente."];
-            } else {
-                $msg = ['type' => 'danger', 'text' => 'Error al guardar: ' . $e->getMessage()];
-            }
+            $msg = ['type' => 'danger', 'text' => 'Error al guardar el producto: ' . $e->getMessage()];
         }
     }
 }
