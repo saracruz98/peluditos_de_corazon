@@ -3,7 +3,10 @@
 require_once __DIR__ . '/src/db_connect.php';
 require_once __DIR__ . '/src/inventory.php';
 
-$pdo = getPDO();
+<?php
+// Ensure DB path is writable for the web server
+putenv('DATABASE_PATH=/tmp/petstore.db');
+?>
 $msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
