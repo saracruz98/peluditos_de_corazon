@@ -1,34 +1,24 @@
 <?php
 // src/db_connect.php
-// Soporta PostgreSQL (Render free DB) via DATABASE_URL
-// y SQLite como fallback local.
-
 function getPDO(): PDO {
     $url = getenv('DATABASE_URL');
-
     if ($url) {
-        // Render proporciona DATABASE_URL en formato:
-        // postgresql://user:password@host:port/dbname
-        $parts = parse_url($url);
+        $parts  = parse_url($url);
         $host   = $parts['host'];
         $port   = $parts['port'] ?? 5432;
         $dbname = ltrim($parts['path'], '/');
         $user   = $parts['user'];
         $pass   = $parts['pass'];
-
-        $dsn = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
-        $pdo = new PDO($dsn, $user, $pass);
+        $dsn    = "pgsql:host=$host;port=$port;dbname=$dbname;sslmode=require";
+        $pdo    = new PDO($dsn, $user, $pass);
     } else {
-        // Fallback: SQLite local (para desarrollo o si no hay DATABASE_URL)
         $path = getenv('DATABASE_PATH') ?: '/tmp/petstore.db';
         $dir  = dirname($path);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
+        if (!is_dir($dir)) mkdir($dir, 0777, true);
+        if (file_exists($path) && !is_writable($path)) @chmod($path, 0664);
         $pdo = new PDO("sqlite:$path");
         $pdo->exec('PRAGMA journal_mode=WAL');
     }
-
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     return $pdo;
 }
@@ -37,7 +27,6 @@ function initDB(PDO $pdo): void {
     $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
     if ($driver === 'pgsql') {
-        // PostgreSQL - crear tablas
         $pdo->exec("CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
@@ -47,14 +36,12 @@ function initDB(PDO $pdo): void {
             purchase_price NUMERIC(10,2) NOT NULL DEFAULT 0,
             sale_price NUMERIC(10,2) NOT NULL DEFAULT 0
         )");
-        // Eliminar constraint UNIQUE en sku si existe (migración)
-        $pdo->exec("DO \$\$ BEGIN
+        // Eliminar UNIQUE en sku si existe
+        @$pdo->exec("DO \$\$ BEGIN
             IF EXISTS (
                 SELECT 1 FROM pg_constraint
                 WHERE conname = 'products_sku_key' AND conrelid = 'products'::regclass
-            ) THEN
-                ALTER TABLE products DROP CONSTRAINT products_sku_key;
-            END IF;
+            ) THEN ALTER TABLE products DROP CONSTRAINT products_sku_key; END IF;
         END \$\$;");
         $pdo->exec("CREATE TABLE IF NOT EXISTS sales (
             id SERIAL PRIMARY KEY,
@@ -68,16 +55,22 @@ function initDB(PDO $pdo): void {
             qty INTEGER NOT NULL,
             purchased_at TIMESTAMP NOT NULL DEFAULT NOW()
         )");
+        // Tabla de registros de baños con raza
+        $pdo->exec("CREATE TABLE IF NOT EXISTS bath_records (
+            id SERIAL PRIMARY KEY,
+            breed TEXT NOT NULL,
+            qty INTEGER NOT NULL DEFAULT 1,
+            price NUMERIC(10,2) NOT NULL DEFAULT 0,
+            recorded_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )");
     } else {
-        // SQLite - crear tablas sin UNIQUE en sku
-        // Si la tabla existe con UNIQUE, la recreamos sin esa restricción
+        // SQLite
         $hasUnique = $pdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name='products' AND sql LIKE '%UNIQUE%'")->fetchColumn();
         if ($hasUnique > 0) {
             $pdo->exec("ALTER TABLE products RENAME TO products_old");
             $pdo->exec("CREATE TABLE products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sku TEXT NOT NULL,
-                name TEXT NOT NULL,
+                sku TEXT NOT NULL, name TEXT NOT NULL,
                 category TEXT NOT NULL DEFAULT 'general',
                 stock INTEGER NOT NULL DEFAULT 0,
                 purchase_price REAL NOT NULL DEFAULT 0,
@@ -88,8 +81,7 @@ function initDB(PDO $pdo): void {
         } else {
             $pdo->exec("CREATE TABLE IF NOT EXISTS products (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sku TEXT NOT NULL,
-                name TEXT NOT NULL,
+                sku TEXT NOT NULL, name TEXT NOT NULL,
                 category TEXT NOT NULL DEFAULT 'general',
                 stock INTEGER NOT NULL DEFAULT 0,
                 purchase_price REAL NOT NULL DEFAULT 0,
@@ -109,6 +101,13 @@ function initDB(PDO $pdo): void {
             qty INTEGER NOT NULL,
             purchased_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY(product_id) REFERENCES products(id)
+        )");
+        $pdo->exec("CREATE TABLE IF NOT EXISTS bath_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            breed TEXT NOT NULL,
+            qty INTEGER NOT NULL DEFAULT 1,
+            price REAL NOT NULL DEFAULT 0,
+            recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
         )");
     }
 }
