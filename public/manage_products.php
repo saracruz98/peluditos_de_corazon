@@ -20,14 +20,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($sku === '' || $name === '') {
         $msg = ['type' => 'danger', 'text' => 'SKU y Nombre son obligatorios.'];
     } else {
-        if ($id) {
-            $pdo->prepare('UPDATE products SET sku=:sku,name=:name,category=:cat,stock=:stk,purchase_price=:pp,sale_price=:sp WHERE id=:id')
-                ->execute([':sku'=>$sku,':name'=>$name,':cat'=>$category,':stk'=>$stock,':pp'=>$pp,':sp'=>$sp,':id'=>$id]);
-            $msg = ['type' => 'success', 'text' => 'Producto actualizado.'];
-        } else {
-            $pdo->prepare('INSERT INTO products (sku,name,category,stock,purchase_price,sale_price) VALUES (:sku,:name,:cat,:stk,:pp,:sp)')
-                ->execute([':sku'=>$sku,':name'=>$name,':cat'=>$category,':stk'=>$stock,':pp'=>$pp,':sp'=>$sp]);
-            $msg = ['type' => 'success', 'text' => 'Producto creado.'];
+        try {
+            if ($id) {
+                $pdo->prepare('UPDATE products SET sku=:sku,name=:name,category=:cat,stock=:stk,purchase_price=:pp,sale_price=:sp WHERE id=:id')
+                    ->execute([':sku'=>$sku,':name'=>$name,':cat'=>$category,':stk'=>$stock,':pp'=>$pp,':sp'=>$sp,':id'=>$id]);
+                $msg = ['type' => 'success', 'text' => 'Producto actualizado correctamente.'];
+            } else {
+                $pdo->prepare('INSERT INTO products (sku,name,category,stock,purchase_price,sale_price) VALUES (:sku,:name,:cat,:stk,:pp,:sp)')
+                    ->execute([':sku'=>$sku,':name'=>$name,':cat'=>$category,':stk'=>$stock,':pp'=>$pp,':sp'=>$sp]);
+                $msg = ['type' => 'success', 'text' => 'Producto creado correctamente.'];
+            }
+        } catch (PDOException $e) {
+            // SKU duplicado u otro error de base de datos
+            if (str_contains($e->getMessage(), 'UNIQUE') || str_contains($e->getMessage(), 'unique')) {
+                $msg = ['type' => 'danger', 'text' => "El SKU \"$sku\" ya existe. Usa otro SKU o edita el producto existente."];
+            } else {
+                $msg = ['type' => 'danger', 'text' => 'Error al guardar: ' . $e->getMessage()];
+            }
         }
     }
 }
