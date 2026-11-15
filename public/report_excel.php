@@ -12,10 +12,6 @@ $bathCount  = getBathCount($pdo);
 $dailySales = getDailySales($pdo);
 $dailyBaths = getDailyBaths($pdo);
 
-$filename = 'reporte_peluditos_' . date('Ymd_His') . '.xlsx';
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="' . $filename . '"');
-
 $w = new SimpleXLSXWriter();
 
 // Hoja 1: Resumen Inventario
@@ -27,28 +23,40 @@ foreach ($sales as $p) {
         $p['sku'],
         $p['name'],
         $p['category'] === 'bano' ? 'Baño' : 'General',
-        $initial,
-        $p['sold'],
-        $remaining,
+        (int)$initial,
+        (int)$p['sold'],
+        (int)$remaining,
         $remaining <= 0 ? 'SÍ - URGENTE' : ($remaining <= 5 ? 'Sí - Poco' : 'No'),
     ];
 }
 $rows[] = [];
-$rows[] = ['Total baños realizados', $bathCount];
+$rows[] = ['Total baños realizados', (int)$bathCount];
 $w->addSheet('Inventario', $rows, [10,30,12,14,12,14,14]);
 
 // Hoja 2: Ventas diarias
 $rows2 = [['Fecha','Unidades vendidas']];
 foreach ($dailySales as $d) {
-    $rows2[] = [$d['day'], $d['total']];
+    $rows2[] = [$d['day'], (int)$d['total']];
 }
 $w->addSheet('Ventas Diarias', $rows2, [15,20]);
 
 // Hoja 3: Baños diarios
 $rows3 = [['Fecha','Baños realizados']];
 foreach ($dailyBaths as $b) {
-    $rows3[] = [$b['day'], $b['baths']];
+    $rows3[] = [$b['day'], (int)$b['baths']];
 }
 $w->addSheet('Baños Diarios', $rows3, [15,20]);
 
-$w->writeToStdOut();
+// Guardar en /tmp y enviar al navegador
+$tmpFile  = '/tmp/reporte_peluditos_' . date('Ymd_His') . '.xlsx';
+$filename = 'reporte_peluditos_' . date('Ymd_His') . '.xlsx';
+
+$w->save($tmpFile);
+
+header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+header('Content-Length: ' . filesize($tmpFile));
+header('Cache-Control: no-cache');
+readfile($tmpFile);
+@unlink($tmpFile); // borrar el temporal después de enviarlo
+exit;
