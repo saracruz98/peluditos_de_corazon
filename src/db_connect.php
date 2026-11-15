@@ -37,7 +37,7 @@ function initDB(PDO $pdo): void {
     $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
     if ($driver === 'pgsql') {
-        // PostgreSQL
+        // PostgreSQL - crear tablas
         $pdo->exec("CREATE TABLE IF NOT EXISTS products (
             id SERIAL PRIMARY KEY,
             sku TEXT NOT NULL,
@@ -47,6 +47,15 @@ function initDB(PDO $pdo): void {
             purchase_price NUMERIC(10,2) NOT NULL DEFAULT 0,
             sale_price NUMERIC(10,2) NOT NULL DEFAULT 0
         )");
+        // Eliminar constraint UNIQUE en sku si existe (migración)
+        $pdo->exec("DO \$\$ BEGIN
+            IF EXISTS (
+                SELECT 1 FROM pg_constraint
+                WHERE conname = 'products_sku_key' AND conrelid = 'products'::regclass
+            ) THEN
+                ALTER TABLE products DROP CONSTRAINT products_sku_key;
+            END IF;
+        END \$\$;");
         $pdo->exec("CREATE TABLE IF NOT EXISTS sales (
             id SERIAL PRIMARY KEY,
             product_id INTEGER NOT NULL REFERENCES products(id),
@@ -60,16 +69,33 @@ function initDB(PDO $pdo): void {
             purchased_at TIMESTAMP NOT NULL DEFAULT NOW()
         )");
     } else {
-        // SQLite
-        $pdo->exec("CREATE TABLE IF NOT EXISTS products (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            sku TEXT NOT NULL,
-            name TEXT NOT NULL,
-            category TEXT NOT NULL DEFAULT 'general',
-            stock INTEGER NOT NULL DEFAULT 0,
-            purchase_price REAL NOT NULL DEFAULT 0,
-            sale_price REAL NOT NULL DEFAULT 0
-        )");
+        // SQLite - crear tablas sin UNIQUE en sku
+        // Si la tabla existe con UNIQUE, la recreamos sin esa restricción
+        $hasUnique = $pdo->query("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND tbl_name='products' AND sql LIKE '%UNIQUE%'")->fetchColumn();
+        if ($hasUnique > 0) {
+            $pdo->exec("ALTER TABLE products RENAME TO products_old");
+            $pdo->exec("CREATE TABLE products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sku TEXT NOT NULL,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT 'general',
+                stock INTEGER NOT NULL DEFAULT 0,
+                purchase_price REAL NOT NULL DEFAULT 0,
+                sale_price REAL NOT NULL DEFAULT 0
+            )");
+            $pdo->exec("INSERT INTO products SELECT * FROM products_old");
+            $pdo->exec("DROP TABLE products_old");
+        } else {
+            $pdo->exec("CREATE TABLE IF NOT EXISTS products (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sku TEXT NOT NULL,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT 'general',
+                stock INTEGER NOT NULL DEFAULT 0,
+                purchase_price REAL NOT NULL DEFAULT 0,
+                sale_price REAL NOT NULL DEFAULT 0
+            )");
+        }
         $pdo->exec("CREATE TABLE IF NOT EXISTS sales (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
