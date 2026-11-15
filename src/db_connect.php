@@ -1,17 +1,22 @@
 <?php
 // src/db_connect.php
-// Siempre usa /tmp/petstore.db que Apache puede escribir en Linux.
-// Si defines DATABASE_PATH en el entorno, usa ese valor.
 function getPDO(): PDO {
     $path = getenv('DATABASE_PATH');
     if (!$path) {
         $path = '/tmp/petstore.db';
     }
-    // Crear directorio si no existe (para rutas personalizadas)
+
+    // Si el archivo existe pero NO es escribible, intentamos darle permisos
+    if (file_exists($path) && !is_writable($path)) {
+        @chmod($path, 0664);
+    }
+
+    // Si el directorio no existe, lo creamos
     $dir = dirname($path);
     if (!is_dir($dir)) {
         mkdir($dir, 0777, true);
     }
+
     $pdo = new PDO("sqlite:$path");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->exec('PRAGMA journal_mode=WAL');
@@ -43,3 +48,4 @@ function initDB(PDO $pdo): void {
         FOREIGN KEY(product_id) REFERENCES products(id)
     )");
 }
+?>
