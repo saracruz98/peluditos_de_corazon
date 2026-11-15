@@ -185,8 +185,8 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
       <td><?= htmlspecialchars($p['name']) ?></td>
       <td><?= $p['category'] === 'bano' ? '🛁 Baño' : '🛒 General' ?></td>
       <td><?= $p['category'] === 'bano' ? '<span class="badge bg-info">Servicio</span>' : '<strong>'.$p['stock'].'</strong>'.($p['stock']<=0?' <span class="badge bg-danger">Agotado</span>':($p['stock']<=5?' <span class="badge bg-warning text-dark">Poco</span>':'')) ?></td>
-      <td><?= $p['category']==='bano' ? '—' : '$ '.number_format($p['purchase_price'], 0, ',', '.') ?></td>
-      <td>$ <?= number_format($p['sale_price'], 0, ',', '.') ?></td>
+      <td><?= $p['category']==='bano' ? '—' : '$'.number_format($p['purchase_price'], 0, ',', '.') ?></td>
+      <td>$<?= number_format($p['sale_price'], 0, ',', '.') ?></td>
       <td><a href="?edit=<?= $p['id'] ?>" class="btn btn-sm btn-outline-primary">Editar</a></td>
     </tr>
   <?php endforeach; ?>
@@ -207,7 +207,7 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
     <tr>
       <td><?= htmlspecialchars($b['breed']) ?></td>
       <td><?= $b['qty'] ?></td>
-      <td>$ <?= number_format($b['price'], 0, ",", ".") ?></td>
+      <td>$<?= number_format($b['price'], 0, ",", ".") ?></td>
       <td><?= $b['recorded_at'] ?></td>
     </tr>
   <?php endforeach; ?>
