@@ -16,11 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product = $s->fetch(PDO::FETCH_ASSOC);
 
     if (!$product) {
-        $msg = ['type' => 'danger', 'text' => 'Producto no encontrado.'];
+        $msg = ['type' => 'danger', 'text' => '⚠️ Producto no encontrado.'];
     } elseif ($qty <= 0) {
-        $msg = ['type' => 'danger', 'text' => 'La cantidad debe ser mayor que 0.'];
+        $msg = ['type' => 'danger', 'text' => '⚠️ La cantidad debe ser mayor que 0.'];
     } elseif ($product['stock'] < $qty) {
-        $msg = ['type' => 'danger', 'text' => "Stock insuficiente. Disponible: {$product['stock']}."];
+        $msg = ['type' => 'danger', 'text' => "⚠️ Stock insuficiente. Disponible: {$product['stock']} unidades."];
     } else {
         $pdo->beginTransaction();
         $pdo->prepare('INSERT INTO sales (product_id,qty) VALUES (:pid,:qty)')
@@ -28,60 +28,168 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare('UPDATE products SET stock=stock-:qty WHERE id=:id')
             ->execute([':qty' => $qty, ':id' => $product_id]);
         $pdo->commit();
-        $restante = $product['stock'] - $qty;
-        $msg = ['type' => 'success', 'text' => "✅ Venta registrada: {$qty} × {$product['name']}. Stock restante: {$restante}."];
+        $restante  = $product['stock'] - $qty;
+        $totalVenta = (int)$product['sale_price'] * $qty;
+        $msg = [
+            'type' => 'success',
+            'text' => "✅ Venta registrada:
+                       <br>📦 <strong>{$product['name']}</strong>
+                       <br>🔢 Cantidad vendida: <strong>{$qty} unidades</strong> × <strong>\$" . number_format((int)$product['sale_price'], 0, ',', '.') . " c/u</strong>
+                       <br>💰 Total recibido: <strong>\$" . number_format($totalVenta, 0, ',', '.') . "</strong>
+                       <br>📊 Stock restante: <strong>{$restante} unidades</strong>"
+        ];
     }
 }
 
-// Solo productos generales en ventas (los baños se registran aparte)
+// Solo productos generales
 $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'bano');
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Pet-Store | Registrar Venta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐾 Peluditos | Registrar Venta</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<style>
+  body { background:#f8f9fa; padding-bottom: 80px; }
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
+    background: #198754; display: flex; border-top: 2px solid #145c38;
+  }
+  .bottom-nav a {
+    flex: 1; text-align: center; color: #fff; text-decoration: none;
+    padding: 10px 4px 6px; font-size: 11px; line-height: 1.3;
+  }
+  .bottom-nav a .nav-icon { font-size: 22px; display: block; }
+  .bottom-nav a.active { background: #145c38; }
+  .bottom-nav a:hover { background: #0f4a2d; }
+  @media (min-width: 768px) {
+    .bottom-nav { display: none; }
+    body { padding-bottom: 0; }
+  }
+  .form-label { font-weight: 600; }
+  #total-box { font-size: 1.2rem; }
+</style>
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-dark bg-success mb-4">
+<body>
+
+<!-- Navbar desktop -->
+<nav class="navbar navbar-dark bg-success mb-3 d-none d-md-flex">
   <div class="container">
-    <span class="navbar-brand fw-bold">🐾 Pet-Store</span>
+    <span class="navbar-brand fw-bold">🐾 Peluditos de Corazón</span>
     <div class="d-flex gap-2">
-      <a href="manage_products.php" class="btn btn-sm btn-light">Productos</a>
-      <a href="record_sale.php"     class="btn btn-sm btn-light">Registrar Venta</a>
-      <a href="purchase_stock.php"  class="btn btn-sm btn-light">Registrar Compra</a>
+      <a href="manage_products.php" class="btn btn-sm btn-light">📦 Productos</a>
+      <a href="record_sale.php"     class="btn btn-sm btn-light fw-bold">💰 Venta</a>
+      <a href="purchase_stock.php"  class="btn btn-sm btn-light">🛒 Compra</a>
       <a href="report_excel.php"    class="btn btn-sm btn-warning">📊 Excel</a>
     </div>
   </div>
 </nav>
-<div class="container">
-<div class="card shadow-sm" style="max-width:600px">
-  <div class="card-header bg-success text-white">💰 Registrar venta</div>
-  <div class="card-body">
-    <?php if ($msg): ?>
-      <div class="alert alert-<?= $msg['type'] ?>"><?= $msg['text'] ?></div>
-    <?php endif; ?>
-    <form method="post">
-      <div class="mb-3">
-        <label class="form-label">Producto</label>
-        <select name="product_id" class="form-select" required>
-          <option value="">Selecciona un producto...</option>
-          <?php foreach ($products as $p): ?>
-            <option value="<?= $p['id'] ?>">
-              <?= htmlspecialchars($p['name']) ?> (<?= $p['category']==='bano'?'Baño':'General' ?>) — Stock: <?= $p['stock'] ?>
-            </option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Cantidad vendida</label>
-        <input name="qty" type="number" min="1" class="form-control" required>
-      </div>
-      <button type="submit" class="btn btn-success w-100">Registrar venta</button>
-    </form>
+
+<!-- Header mobile -->
+<div class="bg-success text-white text-center py-2 d-md-none fw-bold fs-5">🐾 Peluditos de Corazón</div>
+
+<div class="container mt-3">
+  <div class="card shadow-sm">
+    <div class="card-header bg-success text-white fw-bold fs-5">💰 Registrar venta</div>
+    <div class="card-body">
+
+      <?php if ($msg): ?>
+        <div class="alert alert-<?= $msg['type'] ?> alert-dismissible fade show">
+          <?= $msg['text'] ?>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <?php endif; ?>
+
+      <form method="post" id="sale-form">
+        <div class="mb-3">
+          <label class="form-label">📦 Producto</label>
+          <select name="product_id" id="product-select" class="form-select form-select-lg" required onchange="updatePrice()">
+            <option value="">Selecciona un producto...</option>
+            <?php foreach ($products as $p): ?>
+              <option value="<?= $p['id'] ?>"
+                      data-price="<?= (int)$p['sale_price'] ?>"
+                      data-stock="<?= $p['stock'] ?>">
+                <?= htmlspecialchars($p['name']) ?> — Stock: <?= $p['stock'] ?>
+                (P. Venta: $<?= number_format((int)$p['sale_price'], 0, ',', '.') ?>)
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+
+        <!-- Precio de venta del producto seleccionado -->
+        <div class="alert alert-secondary py-2 mb-3" id="price-info" style="display:none">
+          🏷️ Precio de venta unitario: <strong id="unit-price-display">$0</strong>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">🔢 Cantidad vendida</label>
+          <input name="qty" id="qty" type="number" min="1" class="form-control form-control-lg"
+                 placeholder="0" required oninput="calcTotal()">
+        </div>
+
+        <!-- Total en tiempo real -->
+        <div class="alert alert-success py-2 mb-3" id="total-box" style="display:none">
+          💰 Total a cobrar: <strong id="total-display">$0</strong>
+        </div>
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-success btn-lg">✅ Registrar venta</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
-</div>
+
+<!-- Navegación inferior (mobile) -->
+<nav class="bottom-nav d-md-none">
+  <a href="manage_products.php">
+    <span class="nav-icon">📦</span>Productos
+  </a>
+  <a href="record_sale.php" class="active">
+    <span class="nav-icon">💰</span>Venta
+  </a>
+  <a href="purchase_stock.php">
+    <span class="nav-icon">🛒</span>Compra
+  </a>
+  <a href="report_excel.php">
+    <span class="nav-icon">📊</span>Excel
+  </a>
+</nav>
+
+<script>
+function formatCOP(amount) {
+    return '$' + Math.round(amount).toLocaleString('es-CO');
+}
+function updatePrice() {
+    const sel = document.getElementById('product-select');
+    const opt = sel.options[sel.selectedIndex];
+    const price = parseInt(opt.dataset.price || 0);
+    const priceInfo = document.getElementById('price-info');
+    if (price > 0) {
+        document.getElementById('unit-price-display').textContent = formatCOP(price);
+        priceInfo.style.display = '';
+    } else {
+        priceInfo.style.display = 'none';
+    }
+    calcTotal();
+}
+function calcTotal() {
+    const sel   = document.getElementById('product-select');
+    const opt   = sel.options[sel.selectedIndex];
+    const price = parseInt(opt.dataset.price || 0);
+    const qty   = parseInt(document.getElementById('qty').value) || 0;
+    const total = qty * price;
+    const box   = document.getElementById('total-box');
+    if (qty > 0 && price > 0) {
+        document.getElementById('total-display').textContent = formatCOP(total);
+        box.style.display = '';
+    } else {
+        box.style.display = 'none';
+    }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body></html>
+</body>
+</html>
