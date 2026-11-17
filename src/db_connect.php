@@ -53,8 +53,11 @@ function initDB(PDO $pdo): void {
             id SERIAL PRIMARY KEY,
             product_id INTEGER NOT NULL REFERENCES products(id),
             qty INTEGER NOT NULL,
+            unit_price NUMERIC(12,2) NOT NULL DEFAULT 0,
             purchased_at TIMESTAMP NOT NULL DEFAULT NOW()
         )");
+        // Migración: agregar unit_price si no existe
+        @$pdo->exec("ALTER TABLE purchases ADD COLUMN IF NOT EXISTS unit_price NUMERIC(12,2) NOT NULL DEFAULT 0");
         // Tabla de registros de baños con raza
         $pdo->exec("CREATE TABLE IF NOT EXISTS bath_records (
             id SERIAL PRIMARY KEY,
@@ -99,6 +102,7 @@ function initDB(PDO $pdo): void {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             product_id INTEGER NOT NULL,
             qty INTEGER NOT NULL,
+            unit_price REAL NOT NULL DEFAULT 0,
             purchased_at TEXT NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY(product_id) REFERENCES products(id)
         )");
@@ -109,6 +113,11 @@ function initDB(PDO $pdo): void {
             price REAL NOT NULL DEFAULT 0,
             recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
         )");
+        // Migración: agregar unit_price a purchases si no existe (SQLite)
+        $cols = array_column($pdo->query("PRAGMA table_info(purchases)")->fetchAll(PDO::FETCH_ASSOC), 'name');
+        if (!in_array('unit_price', $cols)) {
+            $pdo->exec("ALTER TABLE purchases ADD COLUMN unit_price REAL NOT NULL DEFAULT 0");
+        }
     }
 }
 ?>
