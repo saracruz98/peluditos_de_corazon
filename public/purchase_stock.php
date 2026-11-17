@@ -66,8 +66,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Solo productos generales
-$products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'bano');
+// Productos generales Y accesorios separados
+$allProducts        = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'bano');
+$productsGeneral    = array_filter($allProducts, fn($p) => $p['category'] === 'general');
+$productsAccesorios = array_filter($allProducts, fn($p) => $p['category'] === 'accesorios');
 
 // Resumen financiero general
 $financials = getFinancialSummary($pdo);
@@ -124,13 +126,28 @@ $financials = getFinancialSummary($pdo);
           <label class="form-label">📦 Producto</label>
           <select name="product_id" id="product-select" class="form-select form-select-lg" required onchange="showProductInfo()">
             <option value="">Selecciona un producto...</option>
-            <?php foreach ($products as $p): ?>
-              <option value="<?= $p['id'] ?>"
-                      data-stock="<?= $p['stock'] ?>"
-                      data-price-ref="<?= (int)$p['purchase_price'] ?>">
-                <?= htmlspecialchars($p['name']) ?> — Stock: <?= $p['stock'] ?>
-              </option>
-            <?php endforeach; ?>
+            <?php if (!empty($productsGeneral)): ?>
+              <optgroup label="🛒 Productos Generales">
+                <?php foreach ($productsGeneral as $p): ?>
+                  <option value="<?= $p['id'] ?>"
+                          data-stock="<?= $p['stock'] ?>"
+                          data-price-ref="<?= (int)$p['purchase_price'] ?>">
+                    <?= htmlspecialchars($p['name']) ?> — Stock: <?= $p['stock'] ?>
+                  </option>
+                <?php endforeach; ?>
+              </optgroup>
+            <?php endif; ?>
+            <?php if (!empty($productsAccesorios)): ?>
+              <optgroup label="🎀 Accesorios">
+                <?php foreach ($productsAccesorios as $p): ?>
+                  <option value="<?= $p['id'] ?>"
+                          data-stock="<?= $p['stock'] ?>"
+                          data-price-ref="<?= (int)$p['purchase_price'] ?>">
+                    <?= htmlspecialchars($p['name']) ?> — Stock: <?= $p['stock'] ?>
+                  </option>
+                <?php endforeach; ?>
+              </optgroup>
+            <?php endif; ?>
           </select>
         </div>
 
