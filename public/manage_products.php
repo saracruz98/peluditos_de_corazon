@@ -71,32 +71,10 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🐾 Peluditos | Productos</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<?php require_once __DIR__ . '/src/pwa_head.php'; ?>
 <style>
-  body { background:#f8f9fa; padding-bottom: 80px; }
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-    background: #198754; display: flex; border-top: 2px solid #145c38;
-  }
-  .bottom-nav a {
-    flex: 1; text-align: center; color: #fff; text-decoration: none;
-    padding: 10px 4px 6px; font-size: 11px; line-height: 1.3;
-  }
-  .bottom-nav a .nav-icon { font-size: 22px; display: block; }
-  .bottom-nav a.active { background: #145c38; }
-  .bottom-nav a:hover { background: #0f4a2d; }
-  @media (min-width: 768px) {
-    .bottom-nav { display: none; }
-    body { padding-bottom: 0; }
-  }
-  .card-header { font-size: 1rem; }
-  .table th, .table td { vertical-align: middle; }
-  .form-label { font-weight: 600; }
   .section-title { color: #198754; border-bottom: 2px solid #198754; padding-bottom: 6px; margin-bottom: 16px; }
-  /* Tabla scroll horizontal en mobile */
-  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 </style>
 </head>
 <body>
