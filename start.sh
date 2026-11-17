@@ -18,5 +18,12 @@ fi
 # Inicializar tablas
 su -s /bin/sh www-data -c "php /var/www/html/src/init_db.php"
 
+# Generar íconos PWA si no existen
+if [ ! -f /var/www/html/icons/icon-192.png ]; then
+    echo "Generando iconos PWA..."
+    mkdir -p /var/www/html/icons
+    php /var/www/html/generate_icons.php
+fi
+
 # Lanzar Apache
 exec apache2-foreground

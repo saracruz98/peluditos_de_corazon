@@ -48,27 +48,9 @@ $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'ban
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>🐾 Peluditos | Registrar Venta</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<?php require_once __DIR__ . '/src/pwa_head.php'; ?>
 <style>
-  body { background:#f8f9fa; padding-bottom: 80px; }
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000;
-    background: #198754; display: flex; border-top: 2px solid #145c38;
-  }
-  .bottom-nav a {
-    flex: 1; text-align: center; color: #fff; text-decoration: none;
-    padding: 10px 4px 6px; font-size: 11px; line-height: 1.3;
-  }
-  .bottom-nav a .nav-icon { font-size: 22px; display: block; }
-  .bottom-nav a.active { background: #145c38; }
-  .bottom-nav a:hover { background: #0f4a2d; }
-  @media (min-width: 768px) {
-    .bottom-nav { display: none; }
-    body { padding-bottom: 0; }
-  }
-  .form-label { font-weight: 600; }
   #total-box { font-size: 1.2rem; }
 </style>
 </head>
@@ -142,6 +124,14 @@ $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'ban
   </div>
 </div>
 
+<!-- Banner instalación PWA -->
+<div id="install-banner" style="align-items:center; gap:10px; display:none;">
+  <span style="font-size:28px;">🐾</span>
+  <div style="flex:1"><strong>Instalar app</strong><br><small class="text-muted">Agregar Peluditos a tu pantalla de inicio</small></div>
+  <button id="btn-install-pwa" class="btn btn-success btn-sm">Instalar</button>
+  <button id="btn-dismiss-pwa" class="btn btn-outline-secondary btn-sm">✕</button>
+</div>
+
 <!-- Navegación inferior (mobile) -->
 <nav class="bottom-nav d-md-none">
   <a href="manage_products.php">
@@ -158,38 +148,6 @@ $products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'ban
   </a>
 </nav>
 
-<script>
-function formatCOP(amount) {
-    return '$' + Math.round(amount).toLocaleString('es-CO');
-}
-function updatePrice() {
-    const sel = document.getElementById('product-select');
-    const opt = sel.options[sel.selectedIndex];
-    const price = parseInt(opt.dataset.price || 0);
-    const priceInfo = document.getElementById('price-info');
-    if (price > 0) {
-        document.getElementById('unit-price-display').textContent = formatCOP(price);
-        priceInfo.style.display = '';
-    } else {
-        priceInfo.style.display = 'none';
-    }
-    calcTotal();
-}
-function calcTotal() {
-    const sel   = document.getElementById('product-select');
-    const opt   = sel.options[sel.selectedIndex];
-    const price = parseInt(opt.dataset.price || 0);
-    const qty   = parseInt(document.getElementById('qty').value) || 0;
-    const total = qty * price;
-    const box   = document.getElementById('total-box');
-    if (qty > 0 && price > 0) {
-        document.getElementById('total-display').textContent = formatCOP(total);
-        box.style.display = '';
-    } else {
-        box.style.display = 'none';
-    }
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php require_once __DIR__ . '/src/pwa_scripts.php'; ?>
 </body>
 </html>

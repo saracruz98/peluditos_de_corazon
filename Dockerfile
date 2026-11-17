@@ -7,9 +7,10 @@ RUN apt-get update && \
         libsqlite3-dev \
         libzip-dev \
         libpq-dev \
+        libgd-dev \
         zip \
         unzip && \
-    docker-php-ext-install pdo_sqlite pdo_pgsql zip && \
+    docker-php-ext-install pdo_sqlite pdo_pgsql zip gd && \
     rm -rf /var/lib/apt/lists/*
 
 # Copiar archivos al DocumentRoot

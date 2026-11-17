@@ -279,6 +279,17 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
 </div><!-- /tab-content -->
 </div><!-- /container -->
 
+<!-- Banner instalación PWA -->
+<div id="install-banner" style="align-items:center; gap:10px; display:none;">
+  <span style="font-size:28px;">🐾</span>
+  <div style="flex:1">
+    <strong>Instalar app</strong><br>
+    <small class="text-muted">Agregar Peluditos a tu pantalla de inicio</small>
+  </div>
+  <button id="btn-install-pwa" class="btn btn-success btn-sm">Instalar</button>
+  <button id="btn-dismiss-pwa" class="btn btn-outline-secondary btn-sm">✕</button>
+</div>
+
 <!-- Navegación inferior (mobile) -->
 <nav class="bottom-nav d-md-none">
   <a href="manage_products.php" class="active">
@@ -295,6 +306,6 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
   </a>
 </nav>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<?php require_once __DIR__ . '/src/pwa_scripts.php'; ?>
 </body>
 </html>
