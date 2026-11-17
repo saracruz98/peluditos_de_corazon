@@ -61,8 +61,19 @@ if (isset($_GET['edit'])) {
     $edit = $s->fetch(PDO::FETCH_ASSOC);
 }
 
-// Solo productos GENERALES en inventario
-$products = array_filter(getProductList($pdo), fn($p) => $p['category'] !== 'bano');
+// Productos GENERALES con total invertido acumulado
+$driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+$ifnull = $driver === 'pgsql' ? 'COALESCE' : 'IFNULL';
+$stmt = $pdo->query("
+    SELECT p.*,
+           p.purchase_price + $ifnull(SUM(pu.qty * pu.unit_price), 0) AS total_invertido
+    FROM products p
+    LEFT JOIN purchases pu ON pu.product_id = p.id
+    WHERE p.category = 'general'
+    GROUP BY p.id, p.sku, p.name, p.category, p.stock, p.purchase_price, p.sale_price
+    ORDER BY p.name
+");
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Últimos baños registrados
 $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LIMIT 30')->fetchAll(PDO::FETCH_ASSOC);
@@ -153,7 +164,9 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
                    value="<?= (int)($edit['stock'] ?? 0) ?>">
           </div>
           <div class="col-6 col-md-2">
-            <label class="form-label">P. Compra ($)</label>
+            <label class="form-label">Inversión inicial ($)
+              <span class="fw-normal text-muted" style="font-size:11px;"><br>Lo que costó la compra inicial</span>
+            </label>
             <input name="purchase_price" type="number" step="1" min="0" class="form-control form-control-lg"
                    placeholder="0" value="<?= (int)($edit['purchase_price'] ?? 0) ?>">
           </div>
@@ -183,7 +196,7 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
             <th>Nombre</th>
             <th>SKU</th>
             <th>Stock</th>
-            <th>P. Compra</th>
+            <th>Total invertido<br><small class="fw-normal text-muted">(compras acumuladas)</small></th>
             <th>P. Venta</th>
             <th></th>
           </tr>
@@ -197,7 +210,15 @@ $bathList = $pdo->query('SELECT * FROM bath_records ORDER BY recorded_at DESC LI
               <strong><?= $p['stock'] ?></strong>
               <?= $p['stock'] <= 0 ? '<span class="badge bg-danger ms-1">Agotado</span>' : ($p['stock'] <= 5 ? '<span class="badge bg-warning text-dark ms-1">Poco</span>' : '') ?>
             </td>
-            <td>$<?= number_format((int)$p['purchase_price'], 0, ',', '.') ?></td>
+            <td>
+              <strong>$<?= number_format((float)$p['total_invertido'], 0, ',', '.') ?></strong>
+              <?php if ((float)$p['total_invertido'] > (float)$p['purchase_price']): ?>
+                <br><small class="text-muted">
+                  Inicial: $<?= number_format((int)$p['purchase_price'], 0, ',', '.') ?>
+                  + compras: $<?= number_format((float)$p['total_invertido'] - (float)$p['purchase_price'], 0, ',', '.') ?>
+                </small>
+              <?php endif; ?>
+            </td>
             <td>$<?= number_format((int)$p['sale_price'], 0, ',', '.') ?></td>
             <td><a href="?edit=<?= $p['id'] ?>" class="btn btn-sm btn-outline-primary">✏️ Editar</a></td>
           </tr>
