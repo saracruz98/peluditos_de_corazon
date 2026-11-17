@@ -1,0 +1,46 @@
+{
+  "name": "Peluditos de Corazón",
+  "short_name": "Peluditos",
+  "description": "App de gestión para Peluditos de Corazón - inventario, ventas, baños y reportes",
+  "start_url": "/manage_products.php",
+  "display": "standalone",
+  "background_color": "#198754",
+  "theme_color": "#198754",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Registrar Venta",
+      "short_name": "Venta",
+      "url": "/record_sale.php",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Registrar Compra",
+      "short_name": "Compra",
+      "url": "/purchase_stock.php",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Baños",
+      "short_name": "Baños",
+      "url": "/manage_products.php#tab-bano",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "categories": ["business", "productivity"]
+}
